@@ -1,6 +1,9 @@
-import { providerForHostname } from './providers/index.js';
+import { providerForHostname, providerHostPattern } from './providers/index.js';
 
-const LEGACY_URL_PATTERN = /(?:(?<![A-Za-z0-9_+.-])https?:\/\/|(?<![A-Za-z0-9_+./:-])\/\/)(?:via\.placeholder\.com|placehold\.it|www\.placehold\.it|placeholder\.com|www\.placeholder\.com)(?::\d{1,5})?(?![A-Za-z0-9._:-])(?:[/?#][^\s"'<>`\\)\]}]*)?/giu;
+const LEGACY_URL_PATTERN = new RegExp(
+  `(?:(?<![A-Za-z0-9_+.-])https?:\\/\\/|(?<![A-Za-z0-9_+./:-])\\/\\/)(?:${providerHostPattern})(?::\\d{1,5})?(?![A-Za-z0-9._:-])(?:[/?#][^\\s"'<>\u0060\\\\)\\]}]*)?`,
+  'giu',
+);
 const CANDIDATE_PATTERN = /^(?:(https?):)?\/\/([^/?#:]+)(?::(\d{1,5}))?(.*)$/iu;
 
 function lineStartsFor(content) {
