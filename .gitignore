@@ -1,0 +1,6 @@
+node_modules/
+coverage/
+*.tgz
+migration-report.json
+.DS_Store
+*.log

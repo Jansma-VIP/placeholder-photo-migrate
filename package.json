@@ -1,0 +1,52 @@
+{
+  "name": "placeholder-photo-migrate",
+  "version": "1.0.0",
+  "description": "Safely migrate legacy placeholder image URLs to Placeholder.photo.",
+  "type": "module",
+  "bin": {
+    "placeholder-photo-migrate": "bin/placeholder-photo-migrate.js"
+  },
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage",
+    "lint": "node --check bin/placeholder-photo-migrate.js && node --check src/*.js && node --check src/providers/*.js && node --check test/*.test.js",
+    "prepack": "npm run lint && npm test"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jansma-VIP/placeholder-photo-migrate.git"
+  },
+  "homepage": "https://placeholder.photo",
+  "bugs": {
+    "url": "https://github.com/Jansma-VIP/placeholder-photo-migrate/issues"
+  },
+  "author": {
+    "name": "Jansma VIP / Placeholder.photo",
+    "url": "https://placeholder.photo"
+  },
+  "license": "MIT",
+  "keywords": [
+    "placeholder",
+    "migration",
+    "codemod",
+    "via.placeholder.com",
+    "placehold.it",
+    "placeholder.photo"
+  ]
+}
