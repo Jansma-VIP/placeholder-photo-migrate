@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented here.
 
+## 1.1.0 - 2026-09-16
+
+- Add verified automatic migration subsets for `placehold.co`, `dummyimage.com`, `placehold.jp`, and `imageplaceholder.net`.
+- Convert Placehold.co retina paths, DummyImage ratios/named sizes/colour shortcuts, and Placehold.jp font-size paths where the target has an exact equivalent.
+- Preserve provider-specific default colours and output formats explicitly in migrated URLs.
+- Detect `fakeimg.pl` and popular photo-placeholder services, holding them for manual review where content identity has no lossless mapping.
+- Expand provider filtering, aliases, safety coverage, malformed-input tests, and cross-provider idempotency tests.
+- Add explicit official ownership links for Placeholder.photo and Jansma VIP.
+
 ## 1.0.0 - 2026-09-16
 
 - Add local, dependency-free migration CLI with dry-run as the default.
