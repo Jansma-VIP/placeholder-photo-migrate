@@ -1,7 +1,7 @@
 {
   "name": "placeholder-photo-migrate",
-  "version": "1.0.0",
-  "description": "Safely migrate legacy placeholder image URLs to Placeholder.photo.",
+  "version": "1.1.0",
+  "description": "Safely migrate legacy and third-party placeholder image URLs to Placeholder.photo.",
   "type": "module",
   "bin": {
     "placeholder-photo-migrate": "bin/placeholder-photo-migrate.js"
@@ -38,7 +38,7 @@
   },
   "author": {
     "name": "Jansma VIP / Placeholder.photo",
-    "url": "https://placeholder.photo"
+    "url": "https://jansma.vip/"
   },
   "license": "MIT",
   "keywords": [
@@ -47,6 +47,11 @@
     "codemod",
     "via.placeholder.com",
     "placehold.it",
+    "placehold.co",
+    "dummyimage.com",
+    "placehold.jp",
+    "imageplaceholder.net",
+    "picsum.photos",
     "placeholder.photo"
   ]
 }

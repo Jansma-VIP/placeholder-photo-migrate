@@ -152,7 +152,7 @@ export async function safeWriteTextFile(absolute, content, root, mode) {
 }
 
 export async function resolveReportPath(reportPath, root) {
-  const absolute = path.resolve(reportPath);
+  const absolute = path.isAbsolute(reportPath) ? path.resolve(reportPath) : path.resolve(root, reportPath);
   const parent = path.dirname(absolute);
   await mkdir(parent, { recursive: false }).catch((error) => {
     if (error?.code !== 'EEXIST') throw error;

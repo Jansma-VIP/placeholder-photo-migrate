@@ -3,8 +3,14 @@ import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { VERSION } from '../src/version.js';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+test('CLI version matches package metadata', async () => {
+  const manifest = JSON.parse(await readFile(path.join(projectRoot, 'package.json'), 'utf8'));
+  assert.equal(VERSION, manifest.version);
+});
 
 test('package has no runtime dependencies or lifecycle install scripts', async () => {
   const manifest = JSON.parse(await readFile(path.join(projectRoot, 'package.json'), 'utf8'));

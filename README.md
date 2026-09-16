@@ -2,7 +2,7 @@
 
 The official, local migration tool for moving verified legacy placeholder image URLs to [Placeholder.photo](https://placeholder.photo).
 
-Placeholder.photo is a free URL-first image toolkit operated by Jansma VIP. This CLI finds common dead or legacy placeholder URLs, classifies them against Placeholder.photo's versioned compatibility rules, and can safely update the compatible cases.
+[Placeholder.photo](https://placeholder.photo/) is a free URL-first image toolkit operated by [Jansma VIP](https://jansma.vip/). This CLI finds common dead or legacy placeholder URLs, classifies them against Placeholder.photo's versioned compatibility rules, and can safely update the compatible cases.
 
 ## Quick start
 
@@ -35,6 +35,13 @@ The CLI has a separate, centrally tested provider for each legacy service:
 | `via.placeholder.com` | `https://via.placeholder.com/600/92c952` | Verified classic paths are migrated |
 | `placehold.it` | `http://placehold.it/300x200` | Verified classic paths are migrated |
 | legacy `placeholder.com` | `https://placeholder.com/300x200` | Only an exact, provable image path is migrated |
+| `placehold.co` | `https://placehold.co/600x400/000/FFF/png` | Numeric paths, paired hex colours, formats, and text are migrated |
+| `dummyimage.com` | `https://dummyimage.com/600x400/000/fff.png&text=Hello` | Verified numeric paths and documented text syntax are migrated |
+| `placehold.jp` | `https://placehold.jp/006699/cccc00/150x100.png` | Basic numeric and documented colour paths are migrated |
+| `imageplaceholder.net` | `https://imageplaceholder.net/600x400/eeeeee/131313` | Numeric paths, documented colours, text, PNG, and live defaults are migrated |
+| `fakeimg.pl` | `https://fakeimg.pl/300/` | Detected and reported for manual review; never automatically changed |
+
+Popular photo-placeholder services are also detected: `picsum.photos` (and its old `unsplash.it` hostname), `loremflickr.com`, `placeimg.com`, `lorempixel.com`, `placekitten.com`, `source.unsplash.com`, and `placehold.net`. They remain manual review because random, seeded, category, or specific-photo identity cannot be losslessly mapped to a different image catalogue.
 
 Example:
 
@@ -43,15 +50,17 @@ https://via.placeholder.com/300x200/000000/ffffff?text=Hello+World
 https://placeholder.photo/300x200/000000/ffffff?text=Hello+World
 ```
 
-Safe migrations retain the dimensions, background and foreground colours, custom text, URL encoding, trailing slash, query string, and verified raster extension exactly. HTTP, HTTPS, and protocol-relative source URLs all become the canonical HTTPS Placeholder.photo URL.
+Safe migrations retain the dimensions, background and foreground colours, custom text, URL encoding, query string, and verified format. When a provider omits colours or a format, its verified source defaults are written explicitly into the Placeholder.photo URL so the migrated meaning does not depend on Placeholder.photo's own defaults. HTTP, HTTPS, and protocol-relative source URLs all become the canonical HTTPS Placeholder.photo URL.
 
-The automatic compatibility subset is deliberately narrow:
+The classic automatic compatibility subset is deliberately narrow. Provider-specific rules may support a documented subset of additional formats:
 
 - square or `width×height` dimensions within live rendering limits;
 - optional 3- or 6-digit hexadecimal background and text colours;
 - optional `.png`, `.jpg`, `.jpeg`, `.gif`, or `.webp` suffix;
 - one optional, correctly encoded `text` query parameter;
 - the historical `/img/` path alias accepted by Placeholder.photo.
+
+Provider-specific verified conversions also include Placehold.co `@2x`/`@3x` retina paths mapped to `dpr`, DummyImage numeric ratios, named standard sizes and 1/2/3/6-digit colour shortcuts, and Placehold.jp font-size paths mapped to `fontSize`.
 
 Anything ambiguous is left unchanged and reported as **manual review required**. In particular, the CLI never performs a blind replacement of every `placeholder.com` reference.
 
@@ -68,11 +77,11 @@ See the official [compatibility guide](https://placeholder.photo/compatibility) 
 -v, --version           Show version
 ```
 
-Provider names are `via-placeholder`, `placehold-it`, and `placeholder-com`. `--provider` can be repeated or given a comma-separated list.
+Automatic provider names are `via-placeholder`, `placehold-it`, `placeholder-com`, `placehold-co`, `dummyimage-com`, `placehold-jp`, and `imageplaceholder-net`. Detection-only names include `fakeimg-pl`, `picsum-photos`, `loremflickr`, `placeimg-com`, `lorempixel-com`, `placekitten`, `source-unsplash`, and `placehold-net`. `--provider` can be repeated or given a comma-separated list. Domain aliases such as `placehold.co` are also accepted.
 
 ```sh
 npx placeholder-photo-migrate . --provider via-placeholder
-npx placeholder-photo-migrate . --provider via-placeholder,placehold-it --report migration-report.json
+npx placeholder-photo-migrate . --provider placehold.co,dummyimage.com --report migration-report.json
 ```
 
 Reports contain file locations and URL-level decisions. They are written locally, are excluded from their own scan, and are never transmitted.
@@ -127,14 +136,17 @@ Filenames and contents are treated as untrusted input. The tool does not execute
 - The tool migrates textual source files, not generated binaries or databases.
 - Only syntax covered by Placeholder.photo's verified compatibility implementation is changed automatically.
 - Font metrics, antialiasing, watermarking, and static GIF behavior may differ from discontinued services; see the [compatibility guide](https://placeholder.photo/compatibility).
+- Non-equivalent options such as third-party font families, Placehold.jp CSS, photo themes/catalogues, and all Fakeimg.pl URLs require manual review.
 - Unknown parameters, malformed URLs, hostname variants, explicit ports, unsupported formats, and out-of-limit dimensions require manual review.
 
 ## Support
 
 - [Placeholder.photo](https://placeholder.photo)
+- [Jansma VIP](https://jansma.vip/)
+- [Jansma-VIP on GitHub](https://github.com/Jansma-VIP)
 - [Compatibility documentation](https://placeholder.photo/compatibility)
 - [GitHub Issues](https://github.com/Jansma-VIP/placeholder-photo-migrate/issues)
 
 ## Ownership and license
 
-Built and maintained by Jansma VIP / Placeholder.photo. Released under the [MIT License](LICENSE).
+Built and maintained by [Jansma VIP](https://jansma.vip/) for [Placeholder.photo](https://placeholder.photo/). Released under the [MIT License](LICENSE).

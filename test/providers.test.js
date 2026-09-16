@@ -161,3 +161,196 @@ test('provider aliases and comma-separated filters normalize', () => {
     ['via-placeholder', 'placehold-it'],
   );
 });
+
+test('Placehold.co documented paths preserve explicit or live default semantics', () => {
+  assert.equal(
+    one('https://placehold.co/600x400').replacement,
+    'https://placeholder.photo/600x400/DDDDDD/999999.svg',
+  );
+  assert.equal(
+    one('http://placehold.co/600x400/000000/FFF?text=Hello+World').replacement,
+    'https://placeholder.photo/600x400/000000/FFF.svg?text=Hello+World',
+  );
+  assert.equal(
+    one('//placehold.co/600x400/000/FFF/png').replacement,
+    'https://placeholder.photo/600x400/000/FFF.png',
+  );
+  assert.equal(
+    one('https://placehold.co/400.avif').replacement,
+    'https://placeholder.photo/400/DDDDDD/999999.avif',
+  );
+  assert.equal(
+    one('https://placehold.co/600x400@2x.png?text=Retina').replacement,
+    'https://placeholder.photo/600x400/DDDDDD/999999.png?text=Retina&dpr=2',
+  );
+});
+
+test('Placehold.co ambiguous or non-equivalent features require manual review', () => {
+  for (const source of [
+    'https://www.placehold.co/600x400',
+    'https://placehold.co/600x400/orange/white',
+    'https://placehold.co/600x400/transparent/F00',
+    'https://placehold.co/2000x2000@2x.png',
+    'https://placehold.co/600x400@2x.svg',
+    'https://placehold.co/600x400?font=roboto',
+    'https://placehold.co/600x400.png/png',
+    'https://placehold.co/4096x4096',
+  ]) assert.equal(one(source).status, 'manual', source);
+});
+
+test('DummyImage documented numeric paths preserve formats, defaults, colours, and text encoding', () => {
+  assert.equal(
+    one('https://dummyimage.com/300').replacement,
+    'https://placeholder.photo/300/CCCCCC/000000.png',
+  );
+  assert.equal(
+    one('http://dummyimage.com/600x400/abc').replacement,
+    'https://placeholder.photo/600x400/aabbcc/000000.png',
+  );
+  assert.equal(
+    one('https://dummyimage.com/600x400/000/fff.png&text=Hello+World').replacement,
+    'https://placeholder.photo/600x400/000000/ffffff.png?text=Hello+World',
+  );
+  assert.equal(
+    one('https://dummyimage.com/300.png/09f/fff').replacement,
+    'https://placeholder.photo/300/0099ff/ffffff.png',
+  );
+  assert.equal(
+    one('https://dummyimage.com/641x4:3/ef/f').replacement,
+    'https://placeholder.photo/641x480/efefef/ffffff.png',
+  );
+  assert.equal(
+    one('https://dummyimage.com/16:9x1001').replacement,
+    'https://placeholder.photo/1779x1001/CCCCCC/000000.png',
+  );
+  assert.equal(
+    one('https://dummyimage.com/qvga').replacement,
+    'https://placeholder.photo/320x240/CCCCCC/000000.png',
+  );
+});
+
+test('DummyImage shortcuts and options outside the exact subset require manual review', () => {
+  for (const source of [
+    'https://www.dummyimage.com/300',
+    'https://dummyimage.com/not-a-size',
+    'https://dummyimage.com/300/0/fff',
+    'https://dummyimage.com/300?text=Hello',
+    'https://dummyimage.com/300&text=%ZZ',
+    'https://dummyimage.com/300.png/09f.gif/fff',
+  ]) assert.equal(one(source).status, 'manual', source);
+});
+
+test('Placehold.jp documented basic, colour, and text paths preserve source defaults', () => {
+  assert.equal(
+    one('https://placehold.jp/150x50.png').replacement,
+    'https://placeholder.photo/150x50/CCCCCC/999999.png',
+  );
+  assert.equal(
+    one('http://placehold.jp/ffffff/150x100.png').replacement,
+    'https://placeholder.photo/150x100/CCCCCC/ffffff.png',
+  );
+  assert.equal(
+    one('https://placehold.jp/006699/cccc00/150x100.jpg?text=Hello%20World').replacement,
+    'https://placeholder.photo/150x100/006699/cccc00.jpg?text=Hello%20World',
+  );
+  assert.equal(
+    one('https://placehold.jp/24/cc9999/993333/150x100.png?text=Card').replacement,
+    'https://placeholder.photo/150x100/cc9999/993333.png?text=Card&fontSize=24',
+  );
+});
+
+test('Placehold.jp unsupported advanced forms require manual review', () => {
+  for (const source of [
+    'https://www.placehold.jp/150x50.png',
+    'https://placehold.jp/999/cc9999/993333/150x100.png',
+    'https://placehold.jp/abc/150x100.png',
+    'https://placehold.jp/ccc/fff/150x100.png',
+    'https://placehold.jp/150x100',
+    'https://placehold.jp/150x100.png?css=%7B%7D',
+  ]) assert.equal(one(source).status, 'manual', source);
+});
+
+test('Fakeimg.pl is detected but always held for manual review', () => {
+  for (const source of [
+    'https://fakeimg.pl/300/',
+    'https://fakeimg.pl/350x200/ff0000/000?text=Hello',
+    'https://www.fakeimg.pl/300/',
+  ]) {
+    const finding = one(source);
+    assert.equal(finding.provider, 'fakeimg-pl');
+    assert.equal(finding.status, 'manual');
+    assert.equal(finding.replacement, null);
+  }
+});
+
+test('new provider aliases normalize and filtering remains exact', () => {
+  assert.deepEqual(
+    [...normalizeProviderIds(['placehold.co,dummyimage.com', 'placehold.jp', 'fakeimg.pl'])],
+    ['placehold-co', 'dummyimage-com', 'placehold-jp', 'fakeimg-pl'],
+  );
+  const selected = normalizeProviderIds(['dummyimage-com']);
+  const findings = scanSource(
+    'https://placehold.co/100 https://dummyimage.com/200 https://placehold.jp/300x100.png',
+    selected,
+  );
+  assert.deepEqual(findings.map((finding) => finding.provider), ['dummyimage-com']);
+});
+
+test('lookalike hosts for every new provider are ignored', () => {
+  const source = [
+    'https://placehold.co.evil.example/300',
+    'https://dummyimage.com.evil.example/300',
+    'https://placehold.jp.evil.example/300x200.png',
+    'https://fakeimg.pl.evil.example/300',
+  ].join(' ');
+  assert.deepEqual(scanSource(source, allProviders), []);
+});
+
+test('mixed new providers migrate independently and remain idempotent', () => {
+  const source = [
+    'https://placehold.co/100',
+    'https://dummyimage.com/200/abc/123.jpg&text=Card',
+    'https://placehold.jp/300x100.png',
+    'https://fakeimg.pl/400/',
+  ].join(' ');
+  const firstFindings = scanSource(source, allProviders);
+  assert.deepEqual(firstFindings.map((finding) => finding.status), ['safe', 'safe', 'safe', 'manual']);
+  const migrated = applySafeFindings(source, firstFindings);
+  const secondFindings = scanSource(migrated, allProviders);
+  assert.equal(secondFindings.length, 1);
+  assert.equal(secondFindings[0].provider, 'fakeimg-pl');
+});
+
+test('ImagePlaceholder.net preserves documented colours, text, PNG, and live defaults', () => {
+  assert.equal(
+    one('https://imageplaceholder.net/600x400').replacement,
+    'https://placeholder.photo/600x400/EEEEEE/313131.png',
+  );
+  assert.equal(
+    one('http://imageplaceholder.net/600x400/eeeeee').replacement,
+    'https://placeholder.photo/600x400/eeeeee/313131.png',
+  );
+  assert.equal(
+    one('https://imageplaceholder.net/600x400/4fe8b8/000000?text=Your+text').replacement,
+    'https://placeholder.photo/600x400/4fe8b8/000000.png?text=Your+text',
+  );
+  assert.equal(one('https://imageplaceholder.net/600x400?tag=Summer+beach').status, 'manual');
+});
+
+test('popular photo placeholder services are detected for lossless manual migration', () => {
+  const cases = [
+    ['https://picsum.photos/200/300', 'picsum-photos'],
+    ['https://unsplash.it/200/300', 'picsum-photos'],
+    ['https://loremflickr.com/320/240/cat', 'loremflickr'],
+    ['https://placeimg.com/640/480/nature', 'placeimg-com'],
+    ['https://lorempixel.com/400/200/', 'lorempixel-com'],
+    ['https://placekitten.com/300/200', 'placekitten'],
+    ['https://source.unsplash.com/300x200/?nature', 'source-unsplash'],
+    ['https://placehold.net/600x600', 'placehold-net'],
+  ];
+  for (const [source, provider] of cases) {
+    const finding = one(source);
+    assert.equal(finding.provider, provider);
+    assert.equal(finding.status, 'manual');
+  }
+});

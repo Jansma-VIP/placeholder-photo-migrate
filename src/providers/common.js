@@ -7,7 +7,7 @@ const MAX_PIXELS = 8_000_000;
 const MAX_TEXT_BYTES = 720;
 const MAX_TEXT_CHARACTERS = 180;
 
-function manual(reason) {
+export function manual(reason) {
   return {
     status: 'manual',
     confidence: 'review',
@@ -16,7 +16,7 @@ function manual(reason) {
   };
 }
 
-function safelyDecode(value) {
+export function safelyDecode(value) {
   try {
     return decodeURIComponent(value.replace(/\+/g, ' '));
   } catch {
@@ -24,7 +24,21 @@ function safelyDecode(value) {
   }
 }
 
-function validateQuery(rawQuery) {
+export function validateTextValue(rawValue) {
+  const value = safelyDecode(rawValue);
+  if (value === null) {
+    return 'The text query contains malformed percent-encoding.';
+  }
+  if (value.includes('\0')) {
+    return 'The text query contains a null byte.';
+  }
+  if ([...value].length > MAX_TEXT_CHARACTERS || Buffer.byteLength(value, 'utf8') > MAX_TEXT_BYTES) {
+    return 'The text query exceeds Placeholder.photo compatibility limits.';
+  }
+  return null;
+}
+
+export function validateTextQuery(rawQuery) {
   if (rawQuery === '' || rawQuery === '?') {
     return null;
   }
@@ -38,21 +52,37 @@ function validateQuery(rawQuery) {
   const rawKey = separator === -1 ? parts[0] : parts[0].slice(0, separator);
   const rawValue = separator === -1 ? '' : parts[0].slice(separator + 1);
   const key = safelyDecode(rawKey);
-  const value = safelyDecode(rawValue);
 
   if (key !== 'text') {
     return 'The query string is outside the verified legacy compatibility subset.';
   }
-  if (value === null) {
-    return 'The text query contains malformed percent-encoding.';
-  }
-  if (value.includes('\0')) {
-    return 'The text query contains a null byte.';
-  }
-  if ([...value].length > MAX_TEXT_CHARACTERS || Buffer.byteLength(value, 'utf8') > MAX_TEXT_BYTES) {
-    return 'The text query exceeds Placeholder.photo compatibility limits.';
+  return validateTextValue(rawValue);
+}
+
+export function validateDimensions(width, height) {
+  if (width < 1 || height < 1 || width > MAX_DIMENSION || height > MAX_DIMENSION || width * height > MAX_PIXELS) {
+    return 'The dimensions exceed Placeholder.photo compatibility limits.';
   }
   return null;
+}
+
+export function candidateFragment(candidate) {
+  const fragmentAt = candidate.suffix.indexOf('#');
+  return fragmentAt === -1 ? '' : candidate.suffix.slice(fragmentAt);
+}
+
+export function appendQueryParameter(rawQuery, key, value) {
+  const encoded = `${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+  return rawQuery === '' || rawQuery === '?' ? `?${encoded}` : `${rawQuery}&${encoded}`;
+}
+
+export function safe(replacement) {
+  return {
+    status: 'safe',
+    confidence: 'verified',
+    reason: null,
+    replacement,
+  };
 }
 
 function parsePath(rawPath) {
@@ -79,9 +109,8 @@ function parsePath(rawPath) {
 
   const width = Number.parseInt(size[1], 10);
   const height = size[2] ? Number.parseInt(size[2], 10) : width;
-  if (width < 1 || height < 1 || width > MAX_DIMENSION || height > MAX_DIMENSION || width * height > MAX_PIXELS) {
-    return manual('The dimensions exceed Placeholder.photo compatibility limits.');
-  }
+  const dimensionProblem = validateDimensions(width, height);
+  if (dimensionProblem) return manual(dimensionProblem);
 
   const extensions = [];
   if (size[3]) extensions.push(size[3].toLowerCase());
@@ -114,13 +143,8 @@ export function analyseClassicCandidate(candidate, { exactHost = true } = {}) {
   const pathProblem = parsePath(candidate.path);
   if (pathProblem) return pathProblem;
 
-  const queryProblem = validateQuery(candidate.query);
+  const queryProblem = validateTextQuery(candidate.query);
   if (queryProblem) return manual(queryProblem);
 
-  return {
-    status: 'safe',
-    confidence: 'verified',
-    reason: null,
-    replacement: `https://placeholder.photo${candidate.suffix}`,
-  };
+  return safe(`https://placeholder.photo${candidate.suffix}`);
 }

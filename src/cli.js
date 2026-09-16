@@ -29,7 +29,7 @@ Examples:
 Options:
   --write                 Apply safe migrations (default is dry-run)
   --check                 CI check; never writes source files
-  --provider <provider>   Limit to via-placeholder, placehold-it, or placeholder-com
+  --provider <provider>   Limit to a supported provider ID (repeat or comma-separate)
   --report <file>         Write a local JSON report inside the selected project
   -h, --help              Show help
   -v, --version           Show version
