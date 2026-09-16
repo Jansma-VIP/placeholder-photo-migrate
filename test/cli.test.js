@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 import { runCli } from '../src/cli.js';
+import { VERSION } from '../src/version.js';
 
 function outputSink() {
   let value = '';
@@ -144,6 +145,16 @@ test('--report writes structured local JSON and the report never scans itself', 
   assert.equal((await invoke([root, '--check'])).code, 0);
 });
 
+test('a relative --report path resolves inside the selected project', async (context) => {
+  const root = await makeProject({ 'app.js': 'https://via.placeholder.com/100' });
+  context.after(() => rm(root, { recursive: true, force: true }));
+
+  const result = await invoke([root, '--write', '--report', 'migration-report.json']);
+  assert.equal(result.code, 1);
+  const report = JSON.parse(await readFile(path.join(root, 'migration-report.json'), 'utf8'));
+  assert.equal(report.summary.safeMigrations, 1);
+});
+
 test('report path traversal outside the project is rejected', async (context) => {
   const root = await makeProject({ 'app.js': 'clean' });
   context.after(() => rm(root, { recursive: true, force: true }));
@@ -256,5 +267,5 @@ test('help and version exit successfully', async () => {
   assert.equal(help.code, 0);
   assert.match(help.stdout, /Dry-run|dry-run/i);
   assert.equal(version.code, 0);
-  assert.match(version.stdout, /^1\.0\.0/);
+  assert.equal(version.stdout.trim(), VERSION);
 });
